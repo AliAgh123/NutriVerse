@@ -53,6 +53,7 @@ export const userController = {
 	login: async (req, res) => {
 		try {
 			const { email, password } = req.body;
+			console.log(email + password);
 
 			// Find user
 			const user = await User.findByEmail(email);
