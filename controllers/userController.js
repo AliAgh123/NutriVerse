@@ -1,6 +1,7 @@
 import { User } from "../models/User.js";
 import { UserDisease } from "../models/UserDisease.js";
 import { UserAllergy } from "../models/UserAllergy.js";
+import PointsService from "../services/pointsService.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -53,7 +54,6 @@ export const userController = {
 	login: async (req, res) => {
 		try {
 			const { email, password } = req.body;
-			console.log(email + password);
 
 			// Find user
 			const user = await User.findByEmail(email);
