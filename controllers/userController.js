@@ -171,7 +171,7 @@ export const userController = {
 	getUserPoints: async (req, res) => {
 		try {
 			const points = await PointsService.getCurrentPoints(req.user.userId);
-			res.json({ points });
+			res.status(201).json({ points });
 		} catch (error) {
 			console.error("Get user points error:", error);
 			res.status(500).json({ message: "Internal server error" });
