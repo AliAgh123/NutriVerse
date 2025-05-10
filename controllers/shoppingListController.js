@@ -4,6 +4,9 @@ import { ShoppingListIngredient } from "../models/ShoppingListIngredient.js";
 import { Ingredient } from "../models/Ingredient.js";
 import { UserAllergy } from "../models/UserAllergy.js";
 import { UserDisease } from "../models/UserDisease.js";
+import { IngredientAllergy } from "../models/IngredientAllergy.js";
+import { IngredientDisease } from "../models/IngredientDisease.js";
+import { User } from "../models/User.js";
 
 export const shoppingListController = {
 	// Create a new shopping list

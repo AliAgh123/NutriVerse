@@ -37,7 +37,7 @@ export const userController = {
 			const token = jwt.sign(
 				{ userId: newUser.userid },
 				process.env.JWT_SECRET,
-				{ expiresIn: "1h" }
+				{ expiresIn: "12h" }
 			);
 
 			res.status(201).json({
