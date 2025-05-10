@@ -1,3 +1,4 @@
+import EdamamService from "../services/edamamService.js";
 import { ShoppingList } from "../models/ShoppingList.js";
 import { ShoppingListIngredient } from "../models/ShoppingListIngredient.js";
 import { Ingredient } from "../models/Ingredient.js";
@@ -263,6 +264,152 @@ export const shoppingListController = {
 			});
 		} catch (error) {
 			console.error("Generate smart list error:", error);
+			res.status(500).json({ message: "Internal server error" });
+		}
+	},
+
+	fromEdamam: async (req, res) => {
+		try {
+			const { userId } = req.user;
+			const { ingredients } = req.body;
+
+			if (!ingredients || !Array.isArray(ingredients)) {
+				return res.status(400).json({ message: "Ingredients array required" });
+			}
+
+			const resolvedIngredients = [];
+
+			for (const item of ingredients) {
+				const { text, quantity = 1 } = item;
+
+				// Use Edamam API to standardize the name
+				const foods = await EdamamService.searchFoodItems(text);
+				const label = foods[0]?.label || text;
+
+				// Try to find similar ingredient in DB
+				let ingredient = await Ingredient.query(
+					"SELECT * FROM Ingredient WHERE ingredientName ILIKE $1 LIMIT 1",
+					[`%${label}%`]
+				).then((res) => res.rows[0]);
+
+				// If not found, create it
+				if (!ingredient) {
+					const {
+						rows: [newIngredient],
+					} = await Ingredient.query(
+						`INSERT INTO Ingredient (ingredientName, description, createdBy)
+             VALUES ($1, $2, $3) RETURNING *`,
+						[label, `Imported from Edamam: ${text}`, userId]
+					);
+					ingredient = newIngredient;
+				}
+
+				resolvedIngredients.push({
+					ingredientId: ingredient.ingredientid,
+					ingredientName: ingredient.ingredientname,
+					quantity,
+				});
+			}
+
+			// Reuse smart logic
+			const userAllergies = await UserAllergy.getUserAllergies(userId);
+			const userDiseases = await UserDisease.getUserDiseases(userId);
+
+			const safeIngredients = await Promise.all(
+				resolvedIngredients.map(async (ing) => {
+					const ingredientAllergies =
+						await IngredientAllergy.getIngredientAllergies(ing.ingredientId);
+					const allergyConflict = userAllergies.some((ua) =>
+						ingredientAllergies.some((ia) => ia.allergyid === ua.allergyid)
+					);
+
+					const ingredientDiseases =
+						await IngredientDisease.getIngredientDiseases(ing.ingredientId);
+					const diseaseConflict = userDiseases.some((ud) =>
+						ingredientDiseases.some((id) => id.diseaseid === ud.diseaseid)
+					);
+
+					if (!allergyConflict && !diseaseConflict) {
+						return { ...ing, safe: true };
+					} else {
+						return {
+							...ing,
+							safe: false,
+							warnings: [
+								...(allergyConflict ? ["Allergy conflict"] : []),
+								...(diseaseConflict ? ["Disease restriction"] : []),
+							],
+						};
+					}
+				})
+			);
+
+			// Create shopping list and add safe ingredients
+			const newList = await ShoppingList.create(userId);
+			const added = [];
+
+			for (const ing of safeIngredients.filter((i) => i.safe)) {
+				await ShoppingListIngredient.addIngredientToList(
+					newList.shoppinglistid,
+					ing.ingredientId,
+					ing.quantity
+				);
+				added.push(ing);
+			}
+
+			// 1. Calculate total macros
+			let totalMacros = { fat: 0, protein: 0, carbs: 0 };
+
+			for (const item of ingredients) {
+				const foodInfo = await EdamamService.searchFoodItems(item.text);
+				const nutrients = foodInfo[0]?.nutrients || {};
+
+				totalMacros.fat += nutrients.FAT || 0;
+				totalMacros.protein += nutrients.PROCNT || 0;
+				totalMacros.carbs += nutrients.CHOCDF || 0;
+			}
+
+			// 2. Get user's macro targets
+			const user = await User.findById(userId);
+			const warnings = [];
+
+			if (user.fats && totalMacros.fat > user.fats) {
+				warnings.push(
+					`Total fat (${totalMacros.fat.toFixed(1)}g) exceeds your goal (${
+						user.fats
+					}g)`
+				);
+			}
+			if (user.proteins && totalMacros.protein > user.proteins) {
+				warnings.push(
+					`Total protein (${totalMacros.protein.toFixed(
+						1
+					)}g) exceeds your goal (${user.proteins}g)`
+				);
+			}
+			if (user.carbs && totalMacros.carbs > user.carbs) {
+				warnings.push(
+					`Total carbs (${totalMacros.carbs.toFixed(1)}g) exceeds your goal (${
+						user.carbs
+					}g)`
+				);
+			}
+
+			await ShoppingList.setMacros(newList.shoppinglistid, totalMacros);
+
+			res.status(201).json({
+				listId: newList.shoppinglistid,
+				addedIngredients: added,
+				excludedIngredients: safeIngredients.filter((i) => !i.safe),
+				macros: {
+					fat: totalMacros.fat.toFixed(1),
+					protein: totalMacros.protein.toFixed(1),
+					carbs: totalMacros.carbs.toFixed(1),
+				},
+				macroWarnings: warnings,
+			});
+		} catch (error) {
+			console.error("From-Edamam error:", error);
 			res.status(500).json({ message: "Internal server error" });
 		}
 	},

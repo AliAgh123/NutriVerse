@@ -33,4 +33,10 @@ shoppingListRouter.post(
 	shoppingListController.generateSmartList
 );
 
+shoppingListRouter.post(
+	"/from-edamam",
+	authenticate,
+	shoppingListController.fromEdamam
+);
+
 export default shoppingListRouter;

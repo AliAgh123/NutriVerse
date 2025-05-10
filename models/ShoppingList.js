@@ -19,4 +19,14 @@ export class ShoppingList extends BaseModel {
 		);
 		return rows;
 	}
+	static async setMacros(listId, { fat, protein, carbs }) {
+		const { rows } = await this.query(
+			`UPDATE ${this.tableName} 
+     SET totalFat = $1, totalProtein = $2, totalCarbs = $3 
+     WHERE ${this.primaryKey} = $4 
+     RETURNING *`,
+			[fat, protein, carbs, listId]
+		);
+		return rows[0];
+	}
 }
