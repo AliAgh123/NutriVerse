@@ -5,7 +5,7 @@ import { authenticate } from "../middleware/auth.js";
 
 const recipeRouter = express.Router();
 
-userRouter.use(authenticate);
+recipeRouter.use(authenticate);
 
 // Optional: use `authenticate` middleware if needed
 recipeRouter.get("/search", recipeController.searchRecipes);
