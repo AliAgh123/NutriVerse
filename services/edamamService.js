@@ -43,6 +43,7 @@ class EdamamService {
 	static async searchRecipes({ query, health, diet, calories }) {
 		try {
 			const params = {
+				type: "public",
 				q: query,
 				app_id: EDAMAM_RECIPE_APP_ID,
 				app_key: EDAMAM_RECIPE_APP_KEY,
