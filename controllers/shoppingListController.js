@@ -297,9 +297,9 @@ export const shoppingListController = {
 					const {
 						rows: [newIngredient],
 					} = await Ingredient.query(
-						`INSERT INTO Ingredient (ingredientName, description, createdBy)
-             VALUES ($1, $2, $3) RETURNING *`,
-						[label, `Imported from Edamam: ${text}`, userId]
+						`INSERT INTO Ingredient (ingredientName, description)
+             VALUES ($1, $2) RETURNING *`,
+						[label, `Imported from Edamam: ${text}`]
 					);
 					ingredient = newIngredient;
 				}
