@@ -7,6 +7,7 @@ import ingredientRouter from "./routes/ingredientRoutes.js";
 import diseaseRouter from "./routes/diseaseRoutes.js";
 import shoppingListRouter from "./routes/shoppingListRoutes.js";
 import pointsRouter from "./routes/pointsRoutes.js";
+import recipeRouter from "./routes/recipeRoutes.js";
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -41,5 +42,6 @@ app.use("/api/ingredients", ingredientRouter);
 app.use("/api/diseases", diseaseRouter);
 app.use("/api/shoppingLists", shoppingListRouter);
 app.use("/api/points", pointsRouter);
+app.use("/api/recipes", recipeRouter);
 
 app.listen(port, () => console.log("Server started on PORT: " + port));
