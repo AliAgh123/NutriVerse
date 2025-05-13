@@ -19,8 +19,8 @@ class EdamamService {
 				{
 					title: "Nutrition Analysis",
 					ingr: ingredients,
-					url: "", // Optional recipe URL
-					summary: "", // Optional summary
+					url: "",
+					summary: "",
 				},
 				{
 					params: {
@@ -48,7 +48,7 @@ class EdamamService {
 				app_id: EDAMAM_RECIPE_APP_ID,
 				app_key: EDAMAM_RECIPE_APP_KEY,
 				from: 0,
-				to: 10, // Limit results
+				to: 10,
 			};
 
 			if (health) params.health = health;

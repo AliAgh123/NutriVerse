@@ -4,11 +4,9 @@ import { authenticate } from "../middleware/auth.js";
 
 const allergyRouter = express.Router();
 
-// Public routes
 allergyRouter.get("/", allergyController.getAllAllergies);
 allergyRouter.get("/:id", allergyController.getAllergyDetails);
 
-// Authenticated user routes
 allergyRouter.use(authenticate);
 allergyRouter.post("/", allergyController.createAllergy);
 allergyRouter.post("/user", allergyController.addUserAllergy);

@@ -1,3 +1,6 @@
+-- These Tables were edited later on
+
+
 -- User Table
 CREATE TABLE Users (
     userId SERIAL PRIMARY KEY,

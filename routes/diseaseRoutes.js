@@ -4,7 +4,6 @@ import { authenticate } from "../middleware/auth.js";
 
 const diseaseRouter = express.Router();
 
-// Public routes
 diseaseRouter.get("/", diseaseController.getAllDiseases);
 diseaseRouter.get("/search", diseaseController.searchDiseases);
 diseaseRouter.get("/:id", diseaseController.getDiseaseDetails);
@@ -13,7 +12,6 @@ diseaseRouter.get(
 	diseaseController.getRestrictedIngredients
 );
 
-// Authenticated routes
 diseaseRouter.use(authenticate);
 diseaseRouter.post("/", diseaseController.createDisease);
 diseaseRouter.put("/:id", diseaseController.updateDisease);

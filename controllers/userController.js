@@ -18,22 +18,18 @@ export const userController = {
 		try {
 			const { email, password } = req.body;
 
-			// Check if user already exists
 			const existingUser = await User.findByEmail(email);
 			if (existingUser) {
 				return res.status(409).json({ message: "Email already in use" });
 			}
 
-			// Hash password
 			const hashedPassword = await bcrypt.hash(password, 12);
 
-			// Create user
 			const newUser = await User.create({
 				email,
 				password: hashedPassword,
 			});
 
-			// Generate JWT token
 			const token = jwt.sign(
 				{ userId: newUser.userid },
 				process.env.JWT_SECRET,
@@ -55,19 +51,16 @@ export const userController = {
 		try {
 			const { email, password } = req.body;
 
-			// Find user
 			const user = await User.findByEmail(email);
 			if (!user) {
 				return res.status(401).json({ message: "Invalid credentials" });
 			}
 
-			// Verify password
 			const isMatch = await bcrypt.compare(password, user.password);
 			if (!isMatch) {
 				return res.status(401).json({ message: "Invalid credentials" });
 			}
 
-			// Generate JWT token
 			const token = jwt.sign({ userId: user.userid }, process.env.JWT_SECRET, {
 				expiresIn: "1h",
 			});
@@ -90,7 +83,6 @@ export const userController = {
 				return res.status(404).json({ message: "User not found" });
 			}
 
-			// Get user's health data
 			const diseases = await UserDisease.getUserDiseases(user.userid);
 			const allergies = await UserAllergy.getUserAllergies(user.userid);
 

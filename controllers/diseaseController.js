@@ -3,17 +3,15 @@ import { UserDisease } from "../models/UserDisease.js";
 import { IngredientDisease } from "../models/IngredientDisease.js";
 
 export const diseaseController = {
-	// Create a new disease (open to all authenticated users)
+	// Create a new disease
 	createDisease: async (req, res) => {
 		try {
 			const { diseaseName, description, ingredientIds } = req.body;
 
-			// Validate input
 			if (!diseaseName) {
 				return res.status(400).json({ message: "Disease name is required" });
 			}
 
-			// Check if disease already exists
 			const existingDisease = await Disease.query(
 				"SELECT * FROM Disease WHERE diseaseName = $1",
 				[diseaseName]
@@ -26,7 +24,6 @@ export const diseaseController = {
 				});
 			}
 
-			// Create new disease
 			const {
 				rows: [newDisease],
 			} = await Disease.query(
@@ -35,7 +32,6 @@ export const diseaseController = {
 				[diseaseName, description || null, req.user.userId]
 			);
 
-			// Associate with ingredients if provided
 			if (ingredientIds && ingredientIds.length > 0) {
 				for (const ingredientId of ingredientIds) {
 					await IngredientDisease.linkIngredientToDisease(
@@ -63,7 +59,7 @@ export const diseaseController = {
 		}
 	},
 
-	// Get all diseases (public)
+	// Get all diseases
 	getAllDiseases: async (req, res) => {
 		try {
 			const { search } = req.query;
@@ -90,13 +86,11 @@ export const diseaseController = {
 		try {
 			const { id } = req.params;
 
-			// Get disease
 			const disease = await Disease.findById(id);
 			if (!disease) {
 				return res.status(404).json({ message: "Disease not found" });
 			}
 
-			// Get restricted ingredients
 			const restrictedIngredients =
 				await IngredientDisease.getDiseaseIngredients(id);
 
@@ -148,18 +142,15 @@ export const diseaseController = {
 				return res.status(404).json({ message: "Disease not found" });
 			}
 
-			// Remove all ingredient associations
 			await IngredientDisease.query(
 				"DELETE FROM IngredientDisease WHERE diseaseId = $1",
 				[id]
 			);
 
-			// Remove all user associations
 			await UserDisease.query("DELETE FROM UserDisease WHERE diseaseId = $1", [
 				id,
 			]);
 
-			// Finally delete the disease
 			await Disease.deleteById(id);
 
 			res.status(204).end();
@@ -174,7 +165,6 @@ export const diseaseController = {
 		try {
 			const { diseaseId, ingredientId } = req.params;
 
-			// Verify both exist
 			const disease = await Disease.findById(diseaseId);
 			const ingredient = await Ingredient.findById(ingredientId);
 
@@ -212,7 +202,7 @@ export const diseaseController = {
 		}
 	},
 
-	// Search diseases by name (public)
+	// Search diseases by name
 	searchDiseases: async (req, res) => {
 		try {
 			const { q } = req.query;

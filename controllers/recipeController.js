@@ -1,8 +1,6 @@
-// controllers/recipeController.js
 import EdamamService from "../services/edamamService.js";
 
 export const recipeController = {
-	// GET /api/recipes/search?q=chicken&health=peanut-free
 	searchRecipes: async (req, res) => {
 		try {
 			const { q, health, diet, calories } = req.query;
@@ -24,7 +22,6 @@ export const recipeController = {
 		}
 	},
 
-	// POST /api/nutrition/analyze
 	analyzeNutrition: async (req, res) => {
 		try {
 			const { ingredients } = req.body;
@@ -41,7 +38,6 @@ export const recipeController = {
 		}
 	},
 
-	// GET /api/foods/search?q=apple
 	searchFoods: async (req, res) => {
 		try {
 			const { q, category } = req.query;

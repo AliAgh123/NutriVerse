@@ -3,17 +3,15 @@ import { UserAllergy } from "../models/UserAllergy.js";
 import { IngredientAllergy } from "../models/IngredientAllergy.js";
 
 export const allergyController = {
-	// Create new allergy type (available to all authenticated users)
+	// Create new allergy type
 	createAllergy: async (req, res) => {
 		try {
 			const { allergyName, description, ingredientIds } = req.body;
 
-			// Validate input
 			if (!allergyName) {
 				return res.status(400).json({ message: "Allergy name is required" });
 			}
 
-			// Check if allergy already exists
 			const existingAllergy = await Allergy.query(
 				"SELECT * FROM Allergies WHERE allergyName = $1",
 				[allergyName]
@@ -26,7 +24,6 @@ export const allergyController = {
 				});
 			}
 
-			// Create new allergy
 			const {
 				rows: [newAllergy],
 			} = await Allergy.query(
@@ -35,7 +32,6 @@ export const allergyController = {
 				[allergyName, description || null]
 			);
 
-			// Associate with ingredients if provided
 			if (ingredientIds && ingredientIds.length > 0) {
 				for (const ingredientId of ingredientIds) {
 					await IngredientAllergy.linkAllergyToIngredient(
@@ -62,13 +58,11 @@ export const allergyController = {
 				return res.status(400).json({ message: "Allergy ID is required" });
 			}
 
-			// Verify allergy exists
 			const allergy = await Allergy.findById(allergyId);
 			if (!allergy) {
 				return res.status(404).json({ message: "Allergy not found" });
 			}
 
-			// Add to user's profile
 			await UserAllergy.addAllergyToUser(userId, allergyId);
 
 			res.status(201).json({
@@ -81,7 +75,7 @@ export const allergyController = {
 		}
 	},
 
-	// Get all allergies (public)
+	// Get all allergies
 	getAllAllergies: async (req, res) => {
 		try {
 			const allergies = await Allergy.findAll();
@@ -140,12 +134,11 @@ export const allergyController = {
 		}
 	},
 
-	// Associate ingredient with allergy (for crowd-sourced data)
+	// Associate ingredient with allergy
 	addHarmfulIngredient: async (req, res) => {
 		try {
 			const { allergyId, ingredientId } = req.params;
 
-			// Verify both exist
 			const allergy = await Allergy.findById(allergyId);
 			const ingredient = await Ingredient.findById(ingredientId);
 

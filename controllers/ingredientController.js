@@ -1,12 +1,12 @@
 import { Ingredient } from "../models/Ingredient.js";
 import { IngredientAllergy } from "../models/IngredientAllergy.js";
-import { IngredientDisease } from "../models/IngredientDisease.js"; // New import
+import { IngredientDisease } from "../models/IngredientDisease.js";
 import { ShoppingListIngredient } from "../models/ShoppingListIngredient.js";
 
 export const ingredientController = {
 	createIngredient: async (req, res) => {
 		try {
-			const { ingredientName, description, allergyIds, diseaseIds } = req.body; // Added diseaseIds
+			const { ingredientName, description, allergyIds, diseaseIds } = req.body;
 
 			if (!ingredientName) {
 				return res.status(400).json({ message: "Ingredient name is required" });
@@ -32,7 +32,6 @@ export const ingredientController = {
 				[ingredientName, description || null, req.user.userId]
 			);
 
-			// Add allergy associations
 			if (allergyIds?.length) {
 				for (const allergyId of allergyIds) {
 					await IngredientAllergy.linkAllergyToIngredient(
@@ -42,7 +41,6 @@ export const ingredientController = {
 				}
 			}
 
-			// Add disease associations (NEW)
 			if (diseaseIds?.length) {
 				for (const diseaseId of diseaseIds) {
 					await IngredientDisease.linkIngredientToDisease(
@@ -68,12 +66,12 @@ export const ingredientController = {
 			}
 
 			const allergies = await IngredientAllergy.getIngredientAllergies(id);
-			const diseases = await IngredientDisease.getIngredientDiseases(id); // NEW
+			const diseases = await IngredientDisease.getIngredientDiseases(id);
 
 			res.json({
 				...ingredient,
 				relatedAllergies: allergies,
-				relatedDiseases: diseases, // NEW
+				relatedDiseases: diseases,
 			});
 		} catch (error) {
 			console.error("Get ingredient details error:", error);
@@ -81,7 +79,6 @@ export const ingredientController = {
 		}
 	},
 
-	// NEW: Add disease to ingredient
 	addIngredientDisease: async (req, res) => {
 		try {
 			const { ingredientId, diseaseId } = req.params;
@@ -107,7 +104,6 @@ export const ingredientController = {
 		}
 	},
 
-	// NEW: Remove disease from ingredient
 	removeIngredientDisease: async (req, res) => {
 		try {
 			const { ingredientId, diseaseId } = req.params;
@@ -122,7 +118,6 @@ export const ingredientController = {
 		}
 	},
 
-	// Get all ingredients (public)
 	getAllIngredients: async (req, res) => {
 		try {
 			const { search } = req.query;
@@ -144,12 +139,10 @@ export const ingredientController = {
 		}
 	},
 
-	// Add allergy to ingredient (crowd-sourced data)
 	addIngredientAllergy: async (req, res) => {
 		try {
 			const { ingredientId, allergyId } = req.params;
 
-			// Verify both exist
 			const ingredient = await Ingredient.findById(ingredientId);
 			const allergy = await Allergy.findById(allergyId);
 
@@ -188,7 +181,7 @@ export const ingredientController = {
 		}
 	},
 
-	// Search ingredients by name (public)
+	// Search ingredients by name
 	searchIngredients: async (req, res) => {
 		try {
 			const { q } = req.query;
@@ -211,7 +204,7 @@ export const ingredientController = {
 		}
 	},
 
-	// Get popular ingredients (public)
+	// Get popular ingredients
 	getPopularIngredients: async (req, res) => {
 		try {
 			const { rows: ingredients } = await Ingredient.query(

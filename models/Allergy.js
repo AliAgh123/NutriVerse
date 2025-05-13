@@ -1,4 +1,3 @@
-// models/Allergy.js
 import { BaseModel } from "./BaseModel.js";
 
 export class Allergy extends BaseModel {

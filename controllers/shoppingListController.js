@@ -58,19 +58,16 @@ export const shoppingListController = {
 			const { ingredientId, quantity = 1 } = req.body;
 			const { userId } = req.user;
 
-			// Verify ingredient exists
 			const ingredient = await Ingredient.findById(ingredientId);
 			if (!ingredient) {
 				return res.status(404).json({ message: "Ingredient not found" });
 			}
 
-			// Verify list exists and belongs to user
 			const list = await ShoppingList.findById(id);
 			if (!list || list.userid !== userId) {
 				return res.status(404).json({ message: "Shopping list not found" });
 			}
 
-			// Check for user allergies
 			const userAllergies = await UserAllergy.getUserAllergies(userId);
 			const ingredientAllergies =
 				await IngredientAllergy.getIngredientAllergies(ingredientId);
@@ -79,7 +76,6 @@ export const shoppingListController = {
 				ingredientAllergies.some((ia) => ia.allergyid === allergy.allergyid)
 			);
 
-			// Check for disease restrictions
 			const userDiseases = await UserDisease.getUserDiseases(userId);
 			const ingredientDiseases = await IngredientDisease.getIngredientDiseases(
 				ingredientId
@@ -89,7 +85,6 @@ export const shoppingListController = {
 				ingredientDiseases.some((id) => id.diseaseid === disease.diseaseid)
 			);
 
-			// Add to list with warning if conflicts exist
 			await ShoppingListIngredient.addIngredientToList(
 				id,
 				ingredientId,
@@ -128,7 +123,6 @@ export const shoppingListController = {
 			const { id, ingredientId } = req.params;
 			const { userId } = req.user;
 
-			// Verify list exists and belongs to user
 			const list = await ShoppingList.findById(id);
 			if (!list || list.userid !== userId) {
 				return res.status(404).json({ message: "Shopping list not found" });
@@ -149,7 +143,6 @@ export const shoppingListController = {
 			const { quantity } = req.body;
 			const { userId } = req.user;
 
-			// Verify list exists and belongs to user
 			const list = await ShoppingList.findById(id);
 			if (!list || list.userid !== userId) {
 				return res.status(404).json({ message: "Shopping list not found" });
@@ -181,7 +174,6 @@ export const shoppingListController = {
 			const { id } = req.params;
 			const { userId } = req.user;
 
-			// Verify list exists and belongs to user
 			const list = await ShoppingList.findById(id);
 			if (!list || list.userid !== userId) {
 				return res.status(404).json({ message: "Shopping list not found" });
@@ -201,24 +193,20 @@ export const shoppingListController = {
 			const { userId } = req.user;
 			const { recipeIngredients } = req.body;
 
-			// Get user health restrictions
 			const userAllergies = await UserAllergy.getUserAllergies(userId);
 			const userDiseases = await UserDisease.getUserDiseases(userId);
 
-			// Filter out problematic ingredients
 			const safeIngredients = await Promise.all(
 				recipeIngredients.map(async (ing) => {
 					const ingredient = await Ingredient.findById(ing.ingredientId);
 					if (!ingredient) return null;
 
-					// Check for allergy conflicts
 					const ingredientAllergies =
 						await IngredientAllergy.getIngredientAllergies(ing.ingredientId);
 					const allergyConflict = userAllergies.some((allergy) =>
 						ingredientAllergies.some((ia) => ia.allergyid === allergy.allergyid)
 					);
 
-					// Check for disease conflicts
 					const ingredientDiseases =
 						await IngredientDisease.getIngredientDiseases(ing.ingredientId);
 					const diseaseConflict = userDiseases.some((disease) =>
@@ -246,10 +234,8 @@ export const shoppingListController = {
 				})
 			);
 
-			// Create new shopping list
 			const newList = await ShoppingList.create(userId);
 
-			// Add only safe ingredients to the list
 			const addedIngredients = [];
 			for (const ing of safeIngredients.filter((i) => i?.safe)) {
 				await ShoppingListIngredient.addIngredientToList(
@@ -285,17 +271,14 @@ export const shoppingListController = {
 			for (const item of ingredients) {
 				const { text, quantity = 1 } = item;
 
-				// Use Edamam API to standardize the name
 				const foods = await EdamamService.searchFoodItems(text);
 				const label = foods[0]?.label || text;
 
-				// Try to find similar ingredient in DB
 				let ingredient = await Ingredient.query(
 					"SELECT * FROM Ingredient WHERE ingredientName ILIKE $1 LIMIT 1",
 					[`%${label}%`]
 				).then((res) => res.rows[0]);
 
-				// If not found, create it
 				if (!ingredient) {
 					const {
 						rows: [newIngredient],
@@ -314,7 +297,6 @@ export const shoppingListController = {
 				});
 			}
 
-			// Reuse smart logic
 			const userAllergies = await UserAllergy.getUserAllergies(userId);
 			const userDiseases = await UserDisease.getUserDiseases(userId);
 
@@ -347,7 +329,6 @@ export const shoppingListController = {
 				})
 			);
 
-			// Create shopping list and add safe ingredients
 			const newList = await ShoppingList.create(userId);
 			const added = [];
 
@@ -360,7 +341,6 @@ export const shoppingListController = {
 				added.push(ing);
 			}
 
-			// 1. Calculate total macros
 			let totalMacros = { fat: 0, protein: 0, carbs: 0 };
 
 			for (const item of ingredients) {
@@ -372,7 +352,6 @@ export const shoppingListController = {
 				totalMacros.carbs += nutrients.CHOCDF || 0;
 			}
 
-			// 2. Get user's macro targets
 			const user = await User.findById(userId);
 			const warnings = [];
 

@@ -4,11 +4,9 @@ import { authenticate } from "../middleware/auth.js";
 
 const userRouter = express.Router();
 
-// Public routes
 userRouter.post("/register", userController.register);
 userRouter.post("/login", userController.login);
 
-// Protected routes (require authentication)
 userRouter.use(authenticate);
 
 userRouter.get("/profile", userController.getProfile);
